@@ -42,6 +42,7 @@ class TwitterSearch(object):
                         advanced search: https://twitter.com/search-advanced
         """
         url = self.construct_url(query)
+
         continue_search = True
         min_tweet = None
         response = self.execute_search(url)
@@ -55,9 +56,7 @@ class TwitterSearch(object):
             # If we haven't set our min tweet yet, set it now
             if min_tweet is None:
                 min_tweet = tweets[0]
-
             continue_search = self.save_tweets(tweets)
-
             # Our max tweet is the last tweet in the list
             max_tweet = tweets[-1]
             if min_tweet['tweet_id'] is not max_tweet['tweet_id']:
@@ -222,6 +221,7 @@ class TwitterSlicer(TwitterSearch):
     The only additional parameters a user has to input, is a minimum date, and a maximum date.
     This method also supports parallel scraping.
     """
+    outfile = "tweet"
     def __init__(self, rate_delay, error_delay, since, until, n_threads=1):
         super(TwitterSlicer, self).__init__(rate_delay, error_delay)
         self.since = since
@@ -245,8 +245,8 @@ class TwitterSlicer(TwitterSearch):
         Just prints out tweets
         :return: True always
         """
-        tweets_file = open('tweets.csv', 'a')
-        tweet_ids_file = open('tweet_ids.txt','a')
+        tweets_file = open(outfile+'.csv', 'a')
+        tweet_ids_file = open(outfile+'_ids.txt','a')
 
         for tweet in tweets:
             # Lets add a counter so we only collect a max number of tweets
@@ -275,18 +275,22 @@ if __name__ == '__main__':
     rate_delay_seconds = 0
     error_delay_seconds = 5
 
-    search_query = input("Search term: ")
-    start_date = input("Find tweets since [yyyy-mm-dd]: ")
-    stop_date = input("Find tweets until [yyyy-mm-dd]: ")
+    #search_query = input("Search term: ")
+    #start_date = input("Find tweets since [yyyy-mm-dd]: ")
+    #stop_date = input("Find tweets until [yyyy-mm-dd]: ")
+    search_query = "#twitterature OR #flashfiction"
+    start_date = "2011-01-01"
+    stop_date = "2011-01-04"
+    outfile = search_query.replace(" ","-").replace("#","")+"_"+start_date+"_"+stop_date
 
     select_tweets_since = datetime.datetime.strptime(start_date, '%Y-%m-%d')
     select_tweets_until = datetime.datetime.strptime(stop_date, '%Y-%m-%d')
     threads = 10
 
     # Open the file ready for appending stuff to it
-    tweets_file = open('tweets.csv', 'w')
+    tweets_file = open(outfile+'.csv', 'w')
     tweets_file.write('id;timestamp;user_screen_name;user_name;retweets;favorites;text')
-    
+
     tweets_file.close()
     twitSlice = TwitterSlicer(rate_delay_seconds, error_delay_seconds, select_tweets_since, select_tweets_until,
                               threads)
